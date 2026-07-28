@@ -5,23 +5,21 @@ File        : sobol_rom.v
 Description :
 Dual-read Sobol ROM.
 
-This module stores all pre-generated Sobol stochastic bitstreams.
+Each ROM stores the complete Sobol bitstream library.
+
 Each address corresponds to one complete stochastic stream.
 
-Example:
-
-Address 0   -> 0.00 (Stream A)
-Address 1   -> 0.00 (Stream B)
-Address 2   -> 0.01 (Stream A)
+Address 0   -> 0.00_A
+Address 1   -> 0.00_B
+Address 2   -> 0.01_A
 ...
-Address 201 -> 1.00 (Stream B)
+Address 201 -> 1.00_B
 
-Two independent read ports allow both operand streams of a MAC
-to be loaded simultaneously.
+The ROM provides two independent read ports so that one pair of
+stochastic streams can be loaded every clock cycle.
 
-The ROM contents are initialized from:
-
-library/sobol.mem
+Multiple ROM instances may be instantiated in top.v to reduce
+initialisation latency.
 
 ------------------------------------------------------------------------------
 */
