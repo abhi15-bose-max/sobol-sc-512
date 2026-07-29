@@ -267,4 +267,91 @@ endgenerate
 //============================================================
 
 
+//============================================================
+// Part 3
+//
+// SC Multipliers
+// Sign Routers
+// Popcount Units
+//============================================================
+
+//------------------------------------------------------------
+// SC Multipliers
+//------------------------------------------------------------
+
+genvar mul;
+
+generate
+
+    for (mul = 0;
+         mul < `DOT_PRODUCT_SIZE;
+         mul = mul + 1)
+    begin : GEN_SC_MULTIPLIERS
+
+        sc_multiplier multiplier_inst
+        (
+            .a_bit          (buffer_bit_a[mul]),
+            .b_bit          (buffer_bit_b[mul]),
+
+            .product_bit    (multiplier_out[mul])
+        );
+
+    end
+
+endgenerate
+
+//------------------------------------------------------------
+// Sign Routers
+//------------------------------------------------------------
+
+genvar router;
+
+generate
+
+    for (router = 0;
+         router < `DOT_PRODUCT_SIZE;
+         router = router + 1)
+    begin : GEN_SIGN_ROUTERS
+
+        sign_router sign_router_inst
+        (
+            .product_bit    (multiplier_out[router]),
+
+            .sign_a         (sign_a[router]),
+            .sign_b         (sign_b[router]),
+
+            .positive_bit   (positive_bit[router]),
+            .negative_bit   (negative_bit[router])
+        );
+
+    end
+
+endgenerate
+
+//------------------------------------------------------------
+// Positive Popcount
+//------------------------------------------------------------
+
+popcount positive_popcount
+(
+    .bits   (positive_vector),
+    .count  (positive_count)
+);
+
+//------------------------------------------------------------
+// Negative Popcount
+//------------------------------------------------------------
+
+popcount negative_popcount
+(
+    .bits   (negative_vector),
+    .count  (negative_count)
+);
+
+//============================================================
+// End of Part 3
+//============================================================
+
+
+
 
