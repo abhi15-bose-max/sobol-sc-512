@@ -9,7 +9,7 @@
 //  - Global Signal Declarations
 //============================================================
 
-`include "../rtl/config.vh"
+`include "config.vh"
 
 integer i;
 integer j;
