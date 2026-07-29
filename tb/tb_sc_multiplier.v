@@ -17,19 +17,30 @@ sc_multiplier uut
 initial begin
 
     $dumpfile("dump.vcd");
-    $dumpvars(0,tb_sc_multiplier);
+    $dumpvars(0, tb_sc_multiplier);
 
-    a_bit = 0; b_bit = 0;
-    #10;
+    $display("");
+    $display("==============================================");
+    $display("      STOCHASTIC MULTIPLIER TESTBENCH");
+    $display("==============================================");
+    $display(" a_bit   b_bit   |   product_bit");
+    $display("----------------------------------------------");
 
-    a_bit = 0; b_bit = 1;
-    #10;
+    a_bit = 0; b_bit = 0; #1;
+    $display("   %b       %b     |        %b", a_bit, b_bit, product_bit);
 
-    a_bit = 1; b_bit = 0;
-    #10;
+    a_bit = 0; b_bit = 1; #1;
+    $display("   %b       %b     |        %b", a_bit, b_bit, product_bit);
 
-    a_bit = 1; b_bit = 1;
-    #10;
+    a_bit = 1; b_bit = 0; #1;
+    $display("   %b       %b     |        %b", a_bit, b_bit, product_bit);
+
+    a_bit = 1; b_bit = 1; #1;
+    $display("   %b       %b     |        %b", a_bit, b_bit, product_bit);
+
+    $display("----------------------------------------------");
+    $display("Test Complete.");
+    $display("");
 
     $finish;
 
