@@ -64,8 +64,8 @@ reg [`ROM_ADDR_WIDTH-1:0] rom_addr_b [0:`NUM_ROMS-1];
 
 // Complete stochastic streams coming from ROMs.
 
-reg [`STREAM_LENGTH-1:0] rom_stream_a [0:`NUM_ROMS-1];
-reg [`STREAM_LENGTH-1:0] rom_stream_b [0:`NUM_ROMS-1];
+wire [`STREAM_LENGTH-1:0] rom_stream_a [0:`NUM_ROMS-1];
+wire [`STREAM_LENGTH-1:0] rom_stream_b [0:`NUM_ROMS-1];
 
 //============================================================
 // Sobol ROM Instances
@@ -125,10 +125,10 @@ wire buffer_bit_b [0:`DOT_PRODUCT_SIZE-1];
 // hardware architecture.
 //============================================================
 
-wire [`STREAM_LENGTH-1:0] buffer_stream_a
+reg [`STREAM_LENGTH-1:0] buffer_stream_a
     [0:`DOT_PRODUCT_SIZE-1];
 
-wire [`STREAM_LENGTH-1:0] buffer_stream_b
+reg [`STREAM_LENGTH-1:0] buffer_stream_b
     [0:`DOT_PRODUCT_SIZE-1];
 
 //============================================================
@@ -195,5 +195,3 @@ wire signed [`ACC_WIDTH-1:0] signed_result;
 //============================================================
 // End of Part 1
 //============================================================
-
-
