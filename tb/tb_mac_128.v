@@ -15,19 +15,19 @@ module tb_mac_128;
 // Infrastructure
 //------------------------------------------------------------
 
-`include "includes/tb_mac_128_infra.vh"
+`include "tb_mac_128_infra.vh"
 
 //------------------------------------------------------------
 // Driver
 //------------------------------------------------------------
 
-`include "includes/tb_mac_128_driver.vh"
+`include "tb_mac_128_driver.vh"
 
 //------------------------------------------------------------
 // Scoreboard
 //------------------------------------------------------------
 
-`include "includes/tb_mac_128_scoreboard.vh"
+`include "tb_mac_128_scoreboard.vh"
 
 endmodule
 
