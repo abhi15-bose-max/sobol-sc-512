@@ -3,21 +3,7 @@
 File        : controller.v
 
 Description :
-Finite State Machine (FSM) controlling the Sobol stochastic computing engine.
-
-States
-
-    IDLE
-        Wait for start signal.
-
-    LOAD
-        Fill all local stream buffers from Sobol ROMs.
-
-    COMPUTE
-        Shift stochastic streams and enable accumulation.
-
-    DONE
-        Hold final result until reset.
+Finite State Machine (FSM) controlling the Sobol Stochastic Computing Engine.
 
 ------------------------------------------------------------------------------
 */
@@ -36,10 +22,10 @@ module controller
     output reg done
 );
 
-localparam IDLE    = 2'b00;
-localparam LOAD    = 2'b01;
-localparam COMPUTE = 2'b10;
-localparam DONE    = 2'b11;
+localparam IDLE    = 2'd0;
+localparam LOAD    = 2'd1;
+localparam COMPUTE = 2'd2;
+localparam DONE    = 2'd3;
 
 reg [1:0] state;
 
@@ -49,16 +35,17 @@ integer compute_counter;
 always @(posedge clk)
 begin
 
-    if (rst)
+    if(rst)
     begin
-        state              <= IDLE;
-        load_counter       <= 0;
-        compute_counter    <= 0;
+        state <= IDLE;
 
-        load_enable        <= 0;
-        shift_enable       <= 0;
-        accumulate_enable  <= 0;
-        done               <= 0;
+        load_counter <= 0;
+        compute_counter <= 0;
+
+        load_enable <= 0;
+        shift_enable <= 0;
+        accumulate_enable <= 0;
+        done <= 0;
     end
 
     else
@@ -66,52 +53,104 @@ begin
 
         case(state)
 
+        //----------------------------------------------------------
+        // IDLE
+        //----------------------------------------------------------
+
         IDLE:
         begin
-            load_enable       <= 0;
-            shift_enable      <= 0;
+
+            load_enable <= 0;
+            shift_enable <= 0;
             accumulate_enable <= 0;
-            done              <= 0;
+            done <= 0;
+
+            load_counter <= 0;
+            compute_counter <= 0;
 
             if(start)
-            begin
                 state <= LOAD;
-                load_counter <= 0;
-            end
+
         end
+
+        //----------------------------------------------------------
+        // LOAD
+        //----------------------------------------------------------
 
         LOAD:
         begin
-            load_enable <= 1;
 
-            load_counter <= load_counter + 1;
+            load_enable <= 1;
+            shift_enable <= 0;
+            accumulate_enable <= 0;
+            done <= 0;
 
             if(load_counter == (`LOAD_CYCLES-1))
             begin
+
                 load_enable <= 0;
-                state <= COMPUTE;
+
+                load_counter <= 0;
+
                 compute_counter <= 0;
+
+                state <= COMPUTE;
+
             end
+            else
+            begin
+
+                load_counter <= load_counter + 1;
+
+            end
+
         end
+
+        //----------------------------------------------------------
+        // COMPUTE
+        //----------------------------------------------------------
 
         COMPUTE:
         begin
+
+            load_enable <= 0;
             shift_enable <= 1;
             accumulate_enable <= 1;
-
-            compute_counter <= compute_counter + 1;
+            done <= 0;
 
             if(compute_counter == (`STREAM_LENGTH-1))
             begin
+
                 shift_enable <= 0;
                 accumulate_enable <= 0;
+
+                compute_counter <= 0;
+
                 state <= DONE;
+
             end
+            else
+            begin
+
+                compute_counter <= compute_counter + 1;
+
+            end
+
         end
+
+        //----------------------------------------------------------
+        // DONE
+        //----------------------------------------------------------
 
         DONE:
         begin
+
+            load_enable <= 0;
+            shift_enable <= 0;
+            accumulate_enable <= 0;
+
             done <= 1;
+
         end
 
         endcase
