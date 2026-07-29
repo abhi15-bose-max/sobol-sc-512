@@ -183,15 +183,15 @@ wire [`POPCOUNT_WIDTH-1:0] negative_count;
 // Accumulator Outputs
 //============================================================
 
-wire signed [`ACC_WIDTH-1:0] positive_sum;
-wire signed [`ACC_WIDTH-1:0] negative_sum;
+wire [`ACC_WIDTH-1:0] positive_sum;
+wire [`ACC_WIDTH-1:0] negative_sum;
+
 
 //============================================================
 // Final Result
 //============================================================
 
-wire signed [`ACC_WIDTH-1:0] signed_result;
-
+wire signed [`ACC_WIDTH:0] signed_result;
 //============================================================
 // End of Part 1
 //============================================================
@@ -352,6 +352,71 @@ popcount negative_popcount
 // End of Part 3
 //============================================================
 
+//============================================================
+// Part 4
+//
+// Accumulators
+// Final Subtractor
+// Waveform Dump
+//============================================================
+
+//------------------------------------------------------------
+// Positive Accumulator
+//------------------------------------------------------------
+
+positive_accumulator positive_accumulator_inst
+(
+    .clk                (clk),
+    .rst                (reset),
+    .enable             (accumulate_enable),
+
+    .count              (positive_count),
+
+    .accumulated_sum    (positive_sum)
+);
+
+//------------------------------------------------------------
+// Negative Accumulator
+//------------------------------------------------------------
+
+negative_accumulator negative_accumulator_inst
+(
+    .clk                (clk),
+    .rst                (reset),
+    .enable             (accumulate_enable),
+
+    .count              (negative_count),
+
+    .accumulated_sum    (negative_sum)
+);
+
+//------------------------------------------------------------
+// Final Signed Result
+//------------------------------------------------------------
+
+final_subtractor final_subtractor_inst
+(
+    .positive_sum   (positive_sum),
+    .negative_sum   (negative_sum),
+
+    .signed_result  (signed_result)
+);
+
+//============================================================
+// Waveform Dump
+//============================================================
+
+initial
+begin
+
+    $dumpfile("tb_mac_128.vcd");
+    $dumpvars(0, tb_mac_128);
+
+end;
+
+//============================================================
+// End of Infrastructure
+//============================================================
 
 
 
