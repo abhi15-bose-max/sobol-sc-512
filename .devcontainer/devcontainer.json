@@ -1,0 +1,19 @@
+{
+    "name": "Sobol FPGA",
+
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "mshr-h.VerilogHDL",
+                "eirikpre.systemverilog",
+                "GitHub.copilot"
+            ]
+        }
+    },
+
+    "postCreateCommand": "iverilog -V && yosys -V"
+}
