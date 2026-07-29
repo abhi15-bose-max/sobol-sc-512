@@ -195,3 +195,76 @@ wire signed [`ACC_WIDTH-1:0] signed_result;
 //============================================================
 // End of Part 1
 //============================================================
+
+
+//============================================================
+// Part 2
+//
+// Local Stream Buffers
+//============================================================
+
+genvar buf;
+
+generate
+
+    //--------------------------------------------------------
+    // Operand A Buffers
+    //--------------------------------------------------------
+
+    for (buf = 0;
+         buf < `DOT_PRODUCT_SIZE;
+         buf = buf + 1)
+    begin : GEN_BUFFER_A
+
+        local_stream_buffer buffer_a_inst
+        (
+            .clk        (clk),
+            .reset      (reset),
+
+            .load       (load_buffer_a[buf]),
+            .shift      (shift_buffers),
+
+            .stream_in  (buffer_stream_a[buf]),
+
+            .bit_out    (buffer_bit_a[buf])
+        );
+
+    end
+
+endgenerate
+
+
+generate
+
+    //--------------------------------------------------------
+    // Operand B Buffers
+    //--------------------------------------------------------
+
+    for (buf = 0;
+         buf < `DOT_PRODUCT_SIZE;
+         buf = buf + 1)
+    begin : GEN_BUFFER_B
+
+        local_stream_buffer buffer_b_inst
+        (
+            .clk        (clk),
+            .reset      (reset),
+
+            .load       (load_buffer_b[buf]),
+            .shift      (shift_buffers),
+
+            .stream_in  (buffer_stream_b[buf]),
+
+            .bit_out    (buffer_bit_b[buf])
+        );
+
+    end
+
+endgenerate
+
+//============================================================
+// End of Part 2
+//============================================================
+
+
+
