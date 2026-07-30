@@ -154,3 +154,115 @@ endgenerate;
 //  • Negative Accumulator
 //  • Final Subtractor
 //
+//======================================================================
+// Popcount Inputs
+//======================================================================
+//
+// One routed stochastic bit from each MAC.
+//
+
+wire [NUM_OPERANDS-1:0] positive_bits;
+wire [NUM_OPERANDS-1:0] negative_bits;
+
+
+//======================================================================
+// Router Output Packing
+//======================================================================
+
+generate
+
+for(i = 0; i < NUM_OPERANDS; i = i + 1)
+begin : PACK_ROUTER_BITS
+
+    assign positive_bits[i] = positive_stream[i];
+    assign negative_bits[i] = negative_stream[i];
+
+end
+
+endgenerate;
+
+
+//======================================================================
+// Popcount Outputs
+//======================================================================
+
+wire [`POPCOUNT_WIDTH-1:0] positive_count;
+wire [`POPCOUNT_WIDTH-1:0] negative_count;
+
+
+//======================================================================
+// Popcount Units
+//======================================================================
+
+popcount positive_popcount_inst
+(
+    .bits(positive_bits),
+    .count(positive_count)
+);
+
+
+popcount negative_popcount_inst
+(
+    .bits(negative_bits),
+    .count(negative_count)
+);
+
+
+//======================================================================
+// Accumulator Outputs
+//======================================================================
+
+wire [`ACC_WIDTH-1:0] positive_sum;
+wire [`ACC_WIDTH-1:0] negative_sum;
+
+
+//======================================================================
+// Positive Accumulator
+//======================================================================
+
+positive_accumulator positive_accumulator_inst
+(
+    .clk(clk),
+    .rst(rst),
+
+    .enable(accumulate_enable),
+
+    .count(positive_count),
+
+    .accumulated_sum(positive_sum)
+);
+
+
+//======================================================================
+// Negative Accumulator
+//======================================================================
+
+negative_accumulator negative_accumulator_inst
+(
+    .clk(clk),
+    .rst(rst),
+
+    .enable(accumulate_enable),
+
+    .count(negative_count),
+
+    .accumulated_sum(negative_sum)
+);
+
+
+//======================================================================
+// Final Subtractor
+//======================================================================
+
+wire signed [`ACC_WIDTH:0] signed_result;
+
+
+final_subtractor final_subtractor_inst
+(
+    .positive_sum(positive_sum),
+    .negative_sum(negative_sum),
+
+    .signed_result(signed_result)
+);
+
+
