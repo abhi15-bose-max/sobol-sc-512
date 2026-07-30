@@ -202,17 +202,19 @@ wire [NUM_OPERANDS-1:0] negative_bits;
 // Router Output Packing
 //======================================================================
 
+genvar j;
+
 generate
 
-for(i = 0; i < NUM_OPERANDS; i = i + 1)
+for(j = 0; j < NUM_OPERANDS; j = j + 1)
 begin : PACK_ROUTER_BITS
 
-    assign positive_bits[i] = positive_stream[i];
-    assign negative_bits[i] = negative_stream[i];
+    assign positive_bits[j] = positive_bit[j];
+    assign negative_bits[j] = negative_bit[j];
 
 end
 
-endgenerate;
+endgenerate
 
 
 //======================================================================
