@@ -376,13 +376,14 @@ begin
     // Process one stochastic bit every clock
     //--------------------------------------------------------------
 
-    for(bit_index = 0;
-        bit_index < STREAM_LENGTH;
-        bit_index = bit_index + 1)
-    begin
+    bit_index = 0;
 
+    while(bit_index < STREAM_LENGTH)
+    begin
         @(posedge clk);
 
+        if(accumulate_enable)
+            bit_index = bit_index + 1;
     end
 
     //--------------------------------------------------------------
