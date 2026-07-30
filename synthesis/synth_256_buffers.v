@@ -47,7 +47,7 @@ generate
             .clk      (clk),
             .reset    (reset),
 
-            .load     (1'b1),
+            .load     (reset),
             .shift    (1'b0),
 
             .stream_in({`STREAM_LENGTH{i[0]}}),
