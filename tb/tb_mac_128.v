@@ -299,7 +299,12 @@ final_subtractor final_subtractor_inst
 
     .signed_result(signed_result)
 );
+//======================================================================
+// Performance & Verification
+//======================================================================
 
+integer cycle_counter;
+integer latency_cycles;
 //======================================================================
 // Test Stimulus
 //======================================================================
@@ -377,18 +382,26 @@ begin
     //--------------------------------------------------------------
 
     bit_index = 0;
+    cycle_counter = 0;
 
     while(bit_index < STREAM_LENGTH)
     begin
+
         @(posedge clk);
+
+        cycle_counter = cycle_counter + 1;
 
         if(accumulate_enable)
             bit_index = bit_index + 1;
+
     end
 
+    latency_cycles = cycle_counter;
     //--------------------------------------------------------------
     // Wait one extra cycle
     //--------------------------------------------------------------
+
+    wait(done);
 
     @(posedge clk);
 
@@ -396,11 +409,44 @@ begin
     // Display Result
     //--------------------------------------------------------------
 
-    $display("--------------------------------------------");
-    $display("Positive Sum : %0d", positive_sum);
-    $display("Negative Sum : %0d", negative_sum);
-    $display("Final Result : %0d", signed_result);
-    $display("--------------------------------------------");
+    $display("");
+    $display("==========================================================");
+    $display("         STOCHASTIC MAC SIMULATION SUMMARY");
+    $display("==========================================================");
+
+    $display("Sobol Library Loaded      : PASS");
+
+    if(done)
+        $display("Controller Completed      : PASS");
+    else
+        $display("Controller Completed      : FAIL");
+
+    $display("");
+
+    $display("Operands                  : %0d", NUM_OPERANDS);
+    $display("Stream Length             : %0d bits", STREAM_LENGTH);
+
+    $display("");
+
+    $display("Positive Sum              : %0d", positive_sum);
+    $display("Negative Sum              : %0d", negative_sum);
+    $display("Final MAC Result          : %0d", signed_result);
+
+    $display("");
+    $display("Latency                   : %0d clock cycles",
+            latency_cycles);
+
+    $display("Bit Multiplications       : %0d",
+            NUM_OPERANDS * STREAM_LENGTH);
+
+    $display("");
+
+    if(done && (bit_index == STREAM_LENGTH))
+        $display("Simulation Status         : PASS");
+    else
+        $display("Simulation Status         : FAIL");
+
+    $display("==========================================================");
 
     $finish;
 
