@@ -59,7 +59,7 @@ controller controller_inst
 // Part 3 will unpack entries from this library into the operand streams.
 //
 
-reg [2*STREAM_LENGTH-1:0] sobol_library [0:ROM_DEPTH-1];
+reg [STREAM_LENGTH-1:0] sobol_library [0:ROM_DEPTH-1];
 
 initial
 begin
