@@ -11,7 +11,7 @@ The input width equals the number of MAC units.
 ------------------------------------------------------------------------------
 */
 
-`include "../config.vh"
+`include "config.vh"
 
 module popcount
 (
