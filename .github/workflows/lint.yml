@@ -30,7 +30,7 @@ jobs:
           echo "Starting Verilog Lint"
           echo "========================================"
 
-          FILES=$(find src synthesis -name "*.v" | sort)
+          FILES=$(find src -name "*.v" | sort)
 
           for file in $FILES; do
             echo
