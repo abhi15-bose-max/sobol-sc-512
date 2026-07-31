@@ -12,7 +12,7 @@ Memory loading is handled by loader.v.
 
 ------------------------------------------------------------------------------
 */
-
+/*
 `include "config.vh"
 
 module datapath
@@ -135,3 +135,4 @@ final_subtractor subtractor
 );
 
 endmodule
+*/
