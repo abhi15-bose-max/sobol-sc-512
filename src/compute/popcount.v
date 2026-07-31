@@ -28,7 +28,8 @@ always @(*) begin
 
     for(i = 0; i < `DOT_PRODUCT_SIZE; i = i + 1)
     begin
-        count = count + bits[i];
+        count = count +
+        {{(`POPCOUNT_WIDTH-1){1'b0}}, bits[i]};
     end
 
 end
