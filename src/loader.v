@@ -15,7 +15,7 @@ The loader is responsible for:
 
 ------------------------------------------------------------------------------
 */
-
+/*
 `include "config.vh"
 
 module loader
@@ -150,3 +150,4 @@ end
 endgenerate
 
 endmodule
+*/
