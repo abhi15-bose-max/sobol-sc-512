@@ -34,7 +34,8 @@ begin
         accumulated_sum <= 0;
 
     else if (enable)
-        accumulated_sum <= accumulated_sum + count;
+        accumulated_sum <= accumulated_sum +
+                   {{(`ACC_WIDTH-`POPCOUNT_WIDTH){1'b0}}, count};
 
 end
 
