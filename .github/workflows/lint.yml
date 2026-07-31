@@ -1,1 +1,31 @@
+name: Verilog Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Verilator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator
+
+      - name: Lint Verilog Sources
+        run: |
+          find src synthesis -name "*.v" | \
+          xargs verilator \
+              --lint-only \
+              -Wall \
+              -I./src
 
