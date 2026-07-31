@@ -1,1 +1,172 @@
+name: Sobol SC Synthesis
 
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  synthesis:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Yosys
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yosys
+
+      - name: Show Repository Structure
+        run: |
+          find .
+
+      - name: Create Report Directory
+        run: |
+          mkdir -p reports/synthesis
+
+      ############################################################
+      # 16 Sobol ROMs
+      ############################################################
+
+      - name: Synthesize synth_16_rom
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/memory/sobol_rom.v \
+              synthesis/synth_16_rom.v
+
+            hierarchy -check -top synth_16_rom
+
+            proc
+            opt
+            memory
+            opt
+            techmap
+            opt
+            synth
+
+            stat
+          " > reports/synthesis/synth_16_rom.txt
+
+      ############################################################
+      # 256 Local Stream Buffers
+      ############################################################
+
+      - name: Synthesize synth_256_buffers
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/memory/local_stream_buffer.v \
+              synthesis/synth_256_buffers.v
+
+            hierarchy -check -top synth_256_buffers
+
+            proc
+            opt
+            memory
+            opt
+            techmap
+            opt
+            synth
+
+            stat
+          " > reports/synthesis/synth_256_buffers.txt
+
+      ############################################################
+      # 128 SC Multipliers
+      ############################################################
+
+      - name: Synthesize synth_128_multipliers
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/compute/sc_multiplier.v \
+              synthesis/synth_128_multipliers.v
+
+            hierarchy -check -top synth_128_multipliers
+
+            proc
+            opt
+            synth
+
+            stat
+          " > reports/synthesis/synth_128_multipliers.txt
+
+      ############################################################
+      # 128 Sign Routers
+      ############################################################
+
+      - name: Synthesize synth_128_sign_routers
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/compute/sign_router.v \
+              synthesis/synth_128_sign_routers.v
+
+            hierarchy -check -top synth_128_sign_routers
+
+            proc
+            opt
+            synth
+
+            stat
+          " > reports/synthesis/synth_128_sign_routers.txt
+
+      ############################################################
+      # Compute Core
+      ############################################################
+
+      - name: Synthesize synth_compute_core
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/compute/sc_multiplier.v \
+              src/compute/sign_router.v \
+              src/compute/popcount.v \
+              src/compute/positive_accumulator.v \
+              src/compute/negative_accumulator.v \
+              src/compute/final_subtractor.v \
+              synthesis/synth_compute_core.v
+
+            hierarchy -check -top synth_compute_core
+
+            proc
+            opt
+            memory
+            opt
+            techmap
+            opt
+            synth
+
+            stat
+          " > reports/synthesis/synth_compute_core.txt
+
+      ############################################################
+      # Print Summary
+      ############################################################
+
+      - name: Print Synthesis Reports
+        run: |
+          for report in reports/synthesis/*.txt
+          do
+            echo ""
+            echo "=================================================="
+            echo "$(basename $report)"
+            echo "=================================================="
+            tail -n 40 "$report"
+          done
+
+      ############################################################
+      # Upload Reports
+      ############################################################
+
+      - name: Upload Synthesis Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthesis-reports
+          path: reports/synthesis/
