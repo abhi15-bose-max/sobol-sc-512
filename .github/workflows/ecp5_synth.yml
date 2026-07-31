@@ -1,0 +1,166 @@
+name: Sobol FPGA Synthesis (ECP5)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  fpga_synthesis:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Yosys
+        run: |
+          sudo apt update
+          sudo apt install -y yosys
+
+      - name: Create Report Directory
+        run: |
+          mkdir -p reports/fpga
+
+      ############################################################
+      # 16 Sobol ROMs
+      ############################################################
+
+      - name: FPGA Synthesize synth_16_rom
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/memory/sobol_rom.v \
+              synthesis/synth_16_rom.v
+
+            hierarchy -check -top synth_16_rom
+
+            synth_ecp5 \
+              -top synth_16_rom \
+              -json reports/fpga/synth_16_rom.json
+
+            stat
+          " > reports/fpga/synth_16_rom.txt
+
+      ############################################################
+      # 256 Buffers
+      ############################################################
+
+      - name: FPGA Synthesize synth_256_buffers
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/memory/local_stream_buffer.v \
+              synthesis/synth_256_buffers.v
+
+            hierarchy -check -top synth_256_buffers
+
+            synth_ecp5 \
+              -top synth_256_buffers \
+              -json reports/fpga/synth_256_buffers.json
+
+            stat
+          " > reports/fpga/synth_256_buffers.txt
+
+      ############################################################
+      # 128 Multipliers
+      ############################################################
+
+      - name: FPGA Synthesize synth_128_multipliers
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/compute/sc_multiplier.v \
+              synthesis/synth_128_multipliers.v
+
+            hierarchy -check -top synth_128_multipliers
+
+            synth_ecp5 \
+              -top synth_128_multipliers \
+              -json reports/fpga/synth_128_multipliers.json
+
+            stat
+          " > reports/fpga/synth_128_multipliers.txt
+
+      ############################################################
+      # 128 Sign Routers
+      ############################################################
+
+      - name: FPGA Synthesize synth_128_sign_routers
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/compute/sign_router.v \
+              synthesis/synth_128_sign_routers.v
+
+            hierarchy -check -top synth_128_sign_routers
+
+            synth_ecp5 \
+              -top synth_128_sign_routers \
+              -json reports/fpga/synth_128_sign_routers.json
+
+            stat
+          " > reports/fpga/synth_128_sign_routers.txt
+
+      ############################################################
+      # Compute Core
+      ############################################################
+
+      - name: FPGA Synthesize synth_compute_core
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/compute/sc_multiplier.v \
+              src/compute/sign_router.v \
+              src/compute/popcount.v \
+              src/compute/positive_accumulator.v \
+              src/compute/negative_accumulator.v \
+              src/compute/final_subtractor.v \
+              synthesis/synth_compute_core.v
+
+            hierarchy -check -top synth_compute_core
+
+            synth_ecp5 \
+              -top synth_compute_core \
+              -json reports/fpga/synth_compute_core.json
+
+            stat
+          " > reports/fpga/synth_compute_core.txt
+
+      ############################################################
+      # Print Summary
+      ############################################################
+
+      - name: Print FPGA Reports
+        run: |
+          for report in reports/fpga/*.txt
+          do
+            echo ""
+            echo "=================================================="
+            echo "$(basename $report)"
+            echo "=================================================="
+            tail -n 40 "$report"
+          done
+
+      ############################################################
+      # Upload Reports
+      ############################################################
+
+      - name: Upload FPGA Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: fpga-synthesis-reports
+          path: reports/fpga/*.txt
+
+      ############################################################
+      # Upload JSON Netlists
+      ############################################################
+
+      - name: Upload FPGA Netlists
+        uses: actions/upload-artifact@v4
+        with:
+          name: fpga-netlists
+          path: reports/fpga/*.json
