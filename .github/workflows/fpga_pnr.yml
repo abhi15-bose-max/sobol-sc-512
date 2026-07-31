@@ -10,23 +10,50 @@ jobs:
 
     steps:
 
+      ############################################################
+      # Checkout
+      ############################################################
+
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      ############################################################
+      # Install Tools
+      ############################################################
 
       - name: Install FPGA Tools
         run: |
           sudo apt update
           sudo apt install -y yosys nextpnr-ecp5
 
+      ############################################################
+      # Verify Installation
+      ############################################################
+
+      - name: Verify Tool Installation
+        run: |
+          echo "===== YOSYS ====="
+          which yosys
+          yosys -V
+
+          echo ""
+          echo "===== NEXTPNR ====="
+          which nextpnr-ecp5
+          nextpnr-ecp5 --version || true
+
+      ############################################################
+      # Create Report Directory
+      ############################################################
+
       - name: Create Report Directory
         run: |
           mkdir -p reports/pnr
 
       ############################################################
-      # Generate ECP5 JSON
+      # Generate JSON
       ############################################################
 
-      - name: Synthesize Compute Core
+      - name: Generate Compute Core JSON
         run: |
           yosys -p "
             read_verilog -I src \
@@ -46,40 +73,64 @@ jobs:
           "
 
       ############################################################
+      # Verify JSON
+      ############################################################
+
+      - name: Verify Generated Files
+        run: |
+          echo "===== REPORT DIRECTORY ====="
+          ls -lh reports/pnr
+
+          echo ""
+          echo "===== JSON SIZE ====="
+          wc -c reports/pnr/synth_compute_core.json
+
+      ############################################################
+      # Check Trellis Database
+      ############################################################
+
+      - name: Check Trellis Database
+        run: |
+          echo "===== Searching for Trellis DB ====="
+
+          find /usr -type d -name "trellis*" 2>/dev/null || true
+          find /usr -type d -name "ecp5*" 2>/dev/null || true
+
+      ############################################################
       # Place and Route
       ############################################################
 
       - name: Run nextpnr
         run: |
+          set -o pipefail
+
           nextpnr-ecp5 \
             --25k \
             --package CABGA381 \
             --json reports/pnr/synth_compute_core.json \
             --textcfg reports/pnr/synth_compute_core.config \
-            > reports/pnr/nextpnr_report.txt 2>&1
+            2>&1 | tee reports/pnr/nextpnr_report.txt
 
       ############################################################
-      # Print Timing Summary
+      # Show Report
       ############################################################
 
-      - name: Print nextpnr Summary
+      - name: Show nextpnr Report
+        if: always()
         run: |
-          echo "=================================================="
-          echo "nextpnr Report"
-          echo "=================================================="
-
-          grep -E "Info: Max frequency|Max frequency|Critical path|Device utilisation|Info: Device utilisation|LUT4|TRELLIS_FF|CCU2C|PFUMX|L6MUX21" \
-            reports/pnr/nextpnr_report.txt || true
-
           echo ""
-          echo "============== Tail =============="
-          tail -n 50 reports/pnr/nextpnr_report.txt
+          echo "=================================================="
+          echo "Last 100 Lines"
+          echo "=================================================="
+
+          tail -100 reports/pnr/nextpnr_report.txt || true
 
       ############################################################
-      # Upload Results
+      # Upload Everything
       ############################################################
 
       - name: Upload PnR Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: fpga-pnr-results
