@@ -22,10 +22,31 @@ jobs:
           sudo apt-get install -y verilator
 
       - name: Lint Verilog Sources
+        shell: bash
         run: |
-          find src synthesis -name "*.v" | \
-          xargs verilator \
+          set -e
+
+          echo "========================================"
+          echo "Starting Verilog Lint"
+          echo "========================================"
+
+          FILES=$(find src synthesis -name "*.v" | sort)
+
+          for file in $FILES; do
+            echo
+            echo "----------------------------------------"
+            echo "Linting: $file"
+            echo "----------------------------------------"
+
+            verilator \
               --lint-only \
               -Wall \
-              -I./src
+              -I./src \
+              "$file"
 
+          done
+
+          echo
+          echo "========================================"
+          echo "✓ All Verilog files passed lint."
+          echo "========================================"
