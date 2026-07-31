@@ -24,7 +24,7 @@ initialisation latency.
 ------------------------------------------------------------------------------
 */
 
-`include "../config.vh"
+`include "config.vh"
 
 module sobol_rom
 (
