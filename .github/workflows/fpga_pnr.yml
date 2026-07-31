@@ -1,0 +1,86 @@
+name: Sobol FPGA Place and Route (ECP5)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  pnr:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install FPGA Tools
+        run: |
+          sudo apt update
+          sudo apt install -y yosys nextpnr-ecp5
+
+      - name: Create Report Directory
+        run: |
+          mkdir -p reports/pnr
+
+      ############################################################
+      # Generate ECP5 JSON
+      ############################################################
+
+      - name: Synthesize Compute Core
+        run: |
+          yosys -p "
+            read_verilog -I src \
+              src/compute/sc_multiplier.v \
+              src/compute/sign_router.v \
+              src/compute/popcount.v \
+              src/compute/positive_accumulator.v \
+              src/compute/negative_accumulator.v \
+              src/compute/final_subtractor.v \
+              synthesis/synth_compute_core.v
+
+            hierarchy -check -top synth_compute_core
+
+            synth_ecp5 \
+              -top synth_compute_core \
+              -json reports/pnr/synth_compute_core.json
+          "
+
+      ############################################################
+      # Place and Route
+      ############################################################
+
+      - name: Run nextpnr
+        run: |
+          nextpnr-ecp5 \
+            --25k \
+            --package CABGA381 \
+            --json reports/pnr/synth_compute_core.json \
+            --textcfg reports/pnr/synth_compute_core.config \
+            > reports/pnr/nextpnr_report.txt 2>&1
+
+      ############################################################
+      # Print Timing Summary
+      ############################################################
+
+      - name: Print nextpnr Summary
+        run: |
+          echo "=================================================="
+          echo "nextpnr Report"
+          echo "=================================================="
+
+          grep -E "Info: Max frequency|Max frequency|Critical path|Device utilisation|Info: Device utilisation|LUT4|TRELLIS_FF|CCU2C|PFUMX|L6MUX21" \
+            reports/pnr/nextpnr_report.txt || true
+
+          echo ""
+          echo "============== Tail =============="
+          tail -n 50 reports/pnr/nextpnr_report.txt
+
+      ############################################################
+      # Upload Results
+      ############################################################
+
+      - name: Upload PnR Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: fpga-pnr-results
+          path: reports/pnr/
