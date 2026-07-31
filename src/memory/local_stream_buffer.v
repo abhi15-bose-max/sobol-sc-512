@@ -26,7 +26,7 @@ During computation the ROM is no longer accessed.
 ------------------------------------------------------------------------------
 */
 
-`include "../config.vh"
+`include "config.vh"
 
 module local_stream_buffer
 (
