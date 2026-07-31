@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       ############################################################
-      # Install Tools
+      # Install FPGA Tools
       ############################################################
 
       - name: Install FPGA Tools
@@ -32,12 +32,17 @@ jobs:
 
       - name: Verify Tool Installation
         run: |
-          echo "===== YOSYS ====="
+          echo "=================================================="
+          echo "Yosys"
+          echo "=================================================="
           which yosys
           yosys -V
 
           echo ""
-          echo "===== NEXTPNR ====="
+
+          echo "=================================================="
+          echo "nextpnr"
+          echo "=================================================="
           which nextpnr-ecp5
           nextpnr-ecp5 --version || true
 
@@ -53,7 +58,7 @@ jobs:
       # Generate JSON
       ############################################################
 
-      - name: Generate Compute Core JSON
+      - name: Generate PnR Netlist
         run: |
           yosys -p "
             read_verilog -I src \
@@ -63,13 +68,14 @@ jobs:
               src/compute/positive_accumulator.v \
               src/compute/negative_accumulator.v \
               src/compute/final_subtractor.v \
-              synthesis/synth_compute_core.v
+              synthesis/synth_compute_core.v \
+              synthesis/pnr_compute_core.v
 
-            hierarchy -check -top synth_compute_core
+            hierarchy -check -top pnr_compute_core
 
             synth_ecp5 \
-              -top synth_compute_core \
-              -json reports/pnr/synth_compute_core.json
+              -top pnr_compute_core \
+              -json reports/pnr/pnr_compute_core.json
           "
 
       ############################################################
@@ -78,26 +84,19 @@ jobs:
 
       - name: Verify Generated Files
         run: |
-          echo "===== REPORT DIRECTORY ====="
+          echo "=================================================="
+          echo "Generated Files"
+          echo "=================================================="
+
           ls -lh reports/pnr
 
           echo ""
-          echo "===== JSON SIZE ====="
-          wc -c reports/pnr/synth_compute_core.json
+
+          echo "JSON Size"
+          wc -c reports/pnr/pnr_compute_core.json
 
       ############################################################
-      # Check Trellis Database
-      ############################################################
-
-      - name: Check Trellis Database
-        run: |
-          echo "===== Searching for Trellis DB ====="
-
-          find /usr -type d -name "trellis*" 2>/dev/null || true
-          find /usr -type d -name "ecp5*" 2>/dev/null || true
-
-      ############################################################
-      # Place and Route
+      # Run nextpnr
       ############################################################
 
       - name: Run nextpnr
@@ -107,26 +106,41 @@ jobs:
           nextpnr-ecp5 \
             --25k \
             --package CABGA381 \
-            --json reports/pnr/synth_compute_core.json \
-            --textcfg reports/pnr/synth_compute_core.config \
+            --json reports/pnr/pnr_compute_core.json \
+            --textcfg reports/pnr/pnr_compute_core.config \
             2>&1 | tee reports/pnr/nextpnr_report.txt
 
       ############################################################
-      # Show Report
+      # Print Timing Summary
       ############################################################
 
-      - name: Show nextpnr Report
+      - name: Print Timing Summary
         if: always()
         run: |
           echo ""
           echo "=================================================="
-          echo "Last 100 Lines"
+          echo "Device Utilisation"
           echo "=================================================="
 
-          tail -100 reports/pnr/nextpnr_report.txt || true
+          grep -A30 "Device utilisation" reports/pnr/nextpnr_report.txt || true
+
+          echo ""
+          echo "=================================================="
+          echo "Timing"
+          echo "=================================================="
+
+          grep -E "Max frequency|Critical path|Slack|MHz|ns" \
+            reports/pnr/nextpnr_report.txt || true
+
+          echo ""
+          echo "=================================================="
+          echo "Last 75 Lines"
+          echo "=================================================="
+
+          tail -75 reports/pnr/nextpnr_report.txt || true
 
       ############################################################
-      # Upload Everything
+      # Upload Results
       ############################################################
 
       - name: Upload PnR Results
