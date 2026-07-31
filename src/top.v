@@ -53,9 +53,9 @@ module top
 // Controller Signals
 // -----------------------------------------------------------------------------
 
-wire load_enable;
-wire shift_enable;
-wire accumulate_enable;
+//wire load_enable;
+//wire shift_enable;
+//wire accumulate_enable;
 
 
 // -----------------------------------------------------------------------------
